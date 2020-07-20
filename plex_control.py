@@ -5,17 +5,16 @@ date: 7/19/2020
 """
 
 from plexapi.server import PlexServer
-from queue import Queue
 from dotenv import load_dotenv
 from os import getenv
 
 
-def add_to_queue(plex, queue, new_video):
+def add_to_list(plex, lst, new_video):
     """
     Add a new video to the queue if there are no matching video's
     in the current plex database
     :param plex: The plex server instance
-    :param queue: The queue to add the new video too
+    :param lst: The list to add the new video too
     :param new_video: The new video to add
     :return: True if added to queue, False otherwise
     """
@@ -25,24 +24,10 @@ def add_to_queue(plex, queue, new_video):
         found = video_exists(plex, new_video, "TV Shows")
 
     if not found:
-        queue.put(new_video)
+        lst.append(new_video)
         return True
 
     return False
-
-
-def display_queue(queue):
-    """
-    Display the contents of a python queue
-    :param queue: The queue to display
-    :return: None
-    """
-    queue_size = queue.qsize()
-
-    for i in range(queue_size):
-        queue_front = queue.get()
-        queue.put(queue_front)
-        print(queue_front)
 
 
 def video_exists(plex, video_name, video_type):
@@ -173,17 +158,18 @@ def tests(plex, queue):
     :return: None
     """
     print("======= Attempt to add The Office to queue ============")
-    add_to_queue(plex, queue, 'The Office (US)')
+    add_to_list(plex, queue, 'The Office (US)')
 
     print("\n\n======= Attempt to add One Tree Hill to queue ============")
 
-    add_to_queue(plex, queue, 'One Tree Hill')
+    add_to_list(plex, queue, 'One Tree Hill')
 
     print("\n\n======= Attempt to add Psych to queue ============")
 
-    add_to_queue(plex, queue, 'Psych')
+    add_to_list(plex, queue, 'Psych')
 
-    display_queue(queue)
+    for l in queue:
+        print(l)
 
     print("\n\n======= Find videos by keyword 100 ============")
     find_by_keyword(plex, '100')
@@ -212,7 +198,7 @@ def main():
     PLEX_TOKEN = getenv('PLEX_TOKEN')
 
     plex = PlexServer(PLEX_URL, PLEX_TOKEN)
-    queue = Queue()
+    queue = list()
     tests(plex, queue)
 
 if __name__ == "__main__":
