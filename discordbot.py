@@ -26,7 +26,7 @@ async def bog(ctx):
     await ctx.send(response)
 
 @bot.command(name='queue', help='Queues a Movie/TV Show to be downloaded if it is not already on the server or queue.\nIf multi-worded use double quotes surrounding it.')
-async def queue(ctx, name_of_media):
+async def botqueue(ctx, name_of_media):
     if add_to_queue(plex_server, queue, name_of_media):
         await ctx.send('Media has been added to download queue.')
     else:
