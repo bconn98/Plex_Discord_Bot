@@ -1,10 +1,14 @@
-# bot.py
-import os
+"""
+file: bot.py
+author: Jarod Godlewski
+date: 7/20/2020
+"""
 
+import os
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
-from plex_control import add_to_queue
+from plex_control import add_to_list
 from plexapi.server import PlexServer
 from queue import Queue
 

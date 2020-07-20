@@ -1,4 +1,8 @@
-# clientbot.py
+"""
+file: clientbot.py
+author: Jarod Godlewski
+date: 7/20/2020
+"""
 import os
 
 import discord
