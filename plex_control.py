@@ -6,8 +6,8 @@ date: 7/19/2020
 
 from plexapi.server import PlexServer
 from queue import Queue
-from sys import argv
-from configparser import ConfigParser
+from dotenv import load_dotenv
+from os import getenv
 
 
 def add_to_queue(plex, queue, new_video):
@@ -17,7 +17,7 @@ def add_to_queue(plex, queue, new_video):
     :param plex: The plex server instance
     :param queue: The queue to add the new video too
     :param new_video: The new video to add
-    :return: None
+    :return: True if added to queue, False otherwise
     """
     found = video_exists(plex, new_video, "Movies")
 
@@ -26,6 +26,23 @@ def add_to_queue(plex, queue, new_video):
 
     if not found:
         queue.put(new_video)
+        return True
+
+    return False
+
+
+def display_queue(queue):
+    """
+    Display the contents of a python queue
+    :param queue: The queue to display
+    :return: None
+    """
+    queue_size = queue.qsize()
+
+    for i in range(queue_size):
+        queue_front = queue.get()
+        queue.put(queue_front)
+        print(queue_front)
 
 
 def video_exists(plex, video_name, video_type):
@@ -49,11 +66,14 @@ def find_by_keyword_type(plex, keyword, video_type):
     :param plex: The plex server instance
     :param keyword: The keyword to search for in the plex database
     :param video_type: The type of content to search through
-    :return: None
+    :return: A list of matching videos
     """
+    found_videos = []
     videos = plex.library.section(video_type)
     for video in videos.search(keyword):
-        print('%s (%s)' % (video.title, video.TYPE))
+        found_videos.append(video.title)
+        print(video.title)
+    return found_videos
 
 
 def find_by_keyword(plex, keyword):
@@ -61,24 +81,32 @@ def find_by_keyword(plex, keyword):
     Find all matching content based on the keyword
     :param plex: The plex server instance
     :param keyword: The keyword to search for in the plex database
-    :return: None
+    :return: A list of matching videos
     """
-    find_by_keyword_type(plex, keyword, "Movies")
-    find_by_keyword_type(plex, keyword, "TV Shows")
+    found_videos = find_by_keyword_type(plex, keyword, "Movies")
+    found_videos += find_by_keyword_type(plex, keyword, "TV Shows")
+    return found_videos
 
 
 def current_sessions(plex):
     """
     Get all the current sessions.
     :param plex: The plex server instance
-    :return: None
+    :return: A list of sessions
     """
+    sessions = []
     for session in plex.sessions():
         if hasattr(session, 'grandparentTitle'):
-            print("Show: " + session.grandparentTitle)
-            print("   Title: " + session.title)
+            string = "Show: " + session.grandparentTitle + "\n\t"
+            string += "Title: " + session.title
+            sessions.append(string)
+            print(string)
         else:
-            print("Title: " + session.title )
+            string = "Title: " + session.title
+            sessions.append(string)
+            print(string)
+
+    return sessions
 
 
 def same_director_type(plex, video_name, video_type):
@@ -87,16 +115,20 @@ def same_director_type(plex, video_name, video_type):
     :param plex: The plex server instance
     :param video_name: The video with the director to search for
     :param video_type: The type of videos to search
-    :return: None
+    :return: A list of videos with the same director
     """
     found = video_exists(plex, video_name, video_type)
 
+    videos = []
     if found:
-        movies = plex.library.section(video_type)
-        movie = movies.get(video_name)
-        director = movie.directors[0]
-        for movie in movies.search(None, director=director):
-            print(movie.title)
+        plex_videos = plex.library.section(video_type)
+        director_video = plex_videos.get(video_name)
+        director = director_video.directors[0]
+        for video in plex_videos.search(None, director=director):
+            videos.append(video.title)
+            print(video.title)
+
+    return videos
 
 
 def same_director(plex, video_name):
@@ -104,10 +136,11 @@ def same_director(plex, video_name):
     Find all videos with the same director as the entered video
     :param plex: The plex server instance
     :param video_name: The video with the director to search for
-    :return: None
+    :return: A list of videos with the same director
     """
-    same_director_type(plex, video_name, "Movies")
-    same_director_type(plex, video_name, "TV Shows")
+    videos = same_director_type(plex, video_name, "Movies")
+    videos += same_director_type(plex, video_name, "TV Shows")
+    return videos
 
 
 def refresh(plex):
@@ -146,8 +179,11 @@ def tests(plex, queue):
 
     add_to_queue(plex, queue, 'One Tree Hill')
 
-    while not queue.empty():
-        print(queue.get())
+    print("\n\n======= Attempt to add Psych to queue ============")
+
+    add_to_queue(plex, queue, 'Psych')
+
+    display_queue(queue)
 
     print("\n\n======= Find videos by keyword 100 ============")
     find_by_keyword(plex, '100')
@@ -165,58 +201,19 @@ def tests(plex, queue):
     reset_connection(plex)
 
 
-def init(file_name):
-    """
-    Initialize the plex server.
-    :param file_name: The file containing the server url and plex token.
-    :return: An instance of the plex server
-    """
-    baseurl = 'localhost:32400'
-    plex_token = '00000000000'
-    discord_token = '0000000000'
-    discord_guild = 'Plex_Server_Discord'
-    try:
-        config = ConfigParser()
-        config.read(file_name)
-
-        for section in config.sections():
-            if section == 'plex-server':
-                baseurl = config[section]['url']
-                plex_token = config[section]['token']
-            elif section == 'discord-bot':
-                discord_token = config[section]['DISCORD_TOKEN']
-                discord_guild = config[section]['DISCORD_GUILD']
-    except Exception:
-        print("Initialization of Plex failed")
-        raise
-
-    plex = PlexServer(baseurl, plex_token)
-    # Create Plex instance here
-    return plex
-
-
 def main():
     """
     Initialize the plex server instance and potentially
     run the tests if asked for.
     :return: None
     """
-    if len(argv) == 2 or len(argv) == 3:
+    load_dotenv()
+    PLEX_URL = getenv('PLEX_URL')
+    PLEX_TOKEN = getenv('PLEX_TOKEN')
 
-        try:
-            plex = init(argv[1])
-
-            if len(argv) == 3:
-                if argv[2] == "True":
-                    queue = Queue()
-                    tests(plex, queue)
-
-        except Exception:
-            print("USAGE: plex_control.py server_details [run tests (True/False)]")
-
-    else:
-        print("USAGE: plex_control.py server_details [run tests (True/False)]")
-
+    plex = PlexServer(PLEX_URL, PLEX_TOKEN)
+    queue = Queue()
+    tests(plex, queue)
 
 if __name__ == "__main__":
     main()
