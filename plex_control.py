@@ -23,9 +23,13 @@ def add_to_queue(plex, queue, new_video):
 
     if not found:
         found = video_exists(plex, new_video, "TV Shows")
+        return True
 
     if not found:
         queue.put(new_video)
+        return True
+
+    return False
 
 
 def video_exists(plex, video_name, video_type):
