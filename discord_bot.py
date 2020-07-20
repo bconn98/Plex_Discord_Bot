@@ -1,18 +1,24 @@
-# bot.py
-import os
+"""
+file: discord_bot.py
+author: Jarod Godlewski
+date: 7/20/2020
+"""
 
-import discord
+from discord import Client, utils
 from dotenv import load_dotenv
+from os import getenv
 
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
+DISCORD_TOKEN = getenv('DISCORD_TOKEN')
+DISCORD_GUILD = getenv('DISCORD_GUILD')
+PLEX_URL = getenv('PLEX_URL')
+PLEX_TOKEN = getenv('PLEX_TOKEN')
 
-client = discord.Client()
+client = Client()
 
 @client.event
 async def on_ready():
-    guild = discord.utils.get(client.guilds, name=GUILD)
+    guild = utils.get(client.guilds, name=DISCORD_GUILD)
     print(
         f'{client.user} is connected to the following guild:\n'
         f'{guild.name}(id: {guild.id})'
@@ -41,5 +47,5 @@ async def on_error(event, *args, **kwargs):
             f.write(f'Unhandled message: {args[0]}\n')
         else:
             raise
-        
-client.run(TOKEN)
+
+client.run(DISCORD_TOKEN)
