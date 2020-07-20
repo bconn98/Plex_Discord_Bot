@@ -173,6 +173,8 @@ def init(file_name):
     """
     baseurl = 'localhost:32400'
     plex_token = '00000000000'
+    discord_token = '0000000000'
+    discord_guild = 'Plex_Server_Discord'
     try:
         config = ConfigParser()
         config.read(file_name)
@@ -182,12 +184,14 @@ def init(file_name):
                 baseurl = config[section]['url']
                 plex_token = config[section]['token']
             elif section == 'discord-bot':
-                discord_token = config[section]['token']
+                discord_token = config[section]['DISCORD_TOKEN']
+                discord_guild = config[section]['DISCORD_GUILD']
     except Exception:
         print("Initialization of Plex failed")
         raise
 
     plex = PlexServer(baseurl, plex_token)
+    # Create Plex instance here
     return plex
 
 
