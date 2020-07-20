@@ -1,6 +1,6 @@
 # Do not commit the server_info file as it would give complete control of the server to all with access to repository
 server_info.txt
-.env
+".env"
 
 venv/*
 .idea/*
