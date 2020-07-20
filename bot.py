@@ -28,8 +28,18 @@ async def bog(ctx):
 @bot.command(name='queue', help='Queues a Movie/TV Show to be downloaded if it is not already on the server or queue.\nIf multi-worded use double quotes surrounding it.')
 async def botqueue(ctx, name_of_media):
     if add_to_queue(plex_server, queue, name_of_media):
-        await ctx.send('Media has been added to download queue.')
+        await ctx.send('Media has been added to download queue. \nCurrent Queue: \n'  + display_queue())
     else:
-        await ctx.send('Media is already present in download queue or server.')
+        await ctx.send('Media is already present in download queue or server. \nCurrent Queue: \n'  + display_queue())
 
+def display_queue():
+    queue_size = queue.qsize()
+    result = ''
+
+    for i in range(queue_size):
+        queue_front = queue.get()
+        queue.put(queue_front)
+        result += queue_front + ' '
+
+    return result
 bot.run(TOKEN)
