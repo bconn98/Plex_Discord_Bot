@@ -7,6 +7,7 @@ date: 7/19/2020
 from plexapi.server import PlexServer
 from queue import Queue
 from sys import argv
+from configparser import ConfigParser
 
 
 def add_to_queue(plex, queue, new_video):
@@ -170,16 +171,24 @@ def init(file_name):
     :param file_name: The file containing the server url and plex token.
     :return: An instance of the plex server
     """
+    baseurl = 'localhost:32400'
+    plex_token = '00000000000'
     try:
-        with open(file_name) as file:
-            baseurl = file.readline()
-            token = file.readline()
+        config = ConfigParser()
+        config.read(file_name)
 
-        plex = PlexServer(baseurl, token)
-        return plex
+        for section in config.sections():
+            if section == 'plex-server':
+                baseurl = config[section]['url']
+                plex_token = config[section]['token']
+            elif section == 'discord-bot':
+                discord_token = config[section]['token']
     except Exception:
         print("Initialization of Plex failed")
         raise
+
+    plex = PlexServer(baseurl, plex_token)
+    return plex
 
 
 def main():
