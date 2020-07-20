@@ -4,3 +4,4 @@ server_info.txt
 
 venv/*
 .idea/*
+.env
