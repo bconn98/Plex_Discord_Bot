@@ -4,22 +4,20 @@ author: Jarod Godlewski
 date: 7/20/2020
 """
 
-import os
-import random
-import discord
+from os import getenv
+from random import choice
 
 from dotenv import load_dotenv
 from discord.ext import commands
 from plex_control import add_to_list, find_by_keyword, same_director, current_sessions
 from plexapi.server import PlexServer
-from queue import Queue
 
 
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
-PLEX_URL = os.getenv('PLEX_URL')
-PLEX_TOKEN = os.getenv('PLEX_TOKEN')
+TOKEN = getenv('DISCORD_TOKEN')
+GUILD = getenv('DISCORD_GUILD')
+PLEX_URL = getenv('PLEX_URL')
+PLEX_TOKEN = getenv('PLEX_TOKEN')
 
 bot = commands.Bot(command_prefix='!')
 plex_server = PlexServer(PLEX_URL, PLEX_TOKEN)
@@ -29,7 +27,7 @@ list = []
 @bot.command(name='bog', help='Responds with a bog moment')
 async def bog(ctx):
     bog_moments = ["BOG CHURCH", "Hello? Bog Department?", "bog led theocracy 2020"]
-    response = random.choice(bog_moments)
+    response = choice(bog_moments)
     await ctx.send(response)
 
 @bot.command(name='queue', help='Queues Movie/TV Show to be put on Plex. If multi-worded, surround with double quotes.')
@@ -53,7 +51,7 @@ async def keyword(ctx, keyword):
 @bot.command(name='director', help='Displays list of other media with the same director')
 async def director(ctx, name_of_media):
     result = format_results(same_director(plex_server, director))
-    await ctx.send('Other works by this director: \n' + result)
+    await ctx.send('Works by ' + director + ': \n' + result)
 
 @bot.command(name='sessions', help='Displays what is being watched right now')
 async def sessions(ctx):
