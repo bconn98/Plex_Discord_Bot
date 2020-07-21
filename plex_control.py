@@ -7,6 +7,14 @@ date: 7/19/2020
 from plexapi.server import PlexServer
 from dotenv import load_dotenv
 from os import getenv
+from requests import put
+from sys import stderr
+
+
+load_dotenv()
+PLEX_URL = getenv('PLEX_URL')
+PLEX_TOKEN = getenv('PLEX_TOKEN')
+LOCAL_OCTET = ['10', '127', '192']
 
 
 def add_to_list(plex, lst, new_video):
@@ -161,17 +169,63 @@ def refresh(plex):
     plex.refreshSync()
 
 
-def reset_connection(plex):
+def reset_connection():
     """
     Turn manual port mapping off and back on in an attempt to reset the
     plex server connection
-    :param plex: The plex server instance
     :return: None
     """
-    plex.settings.get("ManualPortMappingMode").set(False)
-    plex.settings.save()
-    plex.settings.get("ManualPortMappingMode").set(True)
-    plex.settings.save()
+    disable_url = PLEX_URL + '/:/prefs?PublishServerOnPlexOnlineKey=false&X-Plex-Client-Identifier' + \
+        '=MyApi&X-Plex-Token=' + PLEX_TOKEN
+    request_status = put(disable_url, None)
+
+    if request_status.status_code != 200:
+        print("Failed to disable remote forwarding", file=stderr)
+        print("Received status code:", request_status, file=stderr)
+
+    enable_url = PLEX_URL + '/:/prefs?PublishServerOnPlexOnlineKey=true&X-Plex-Client-Identifier' + \
+        '=MyApi&X-Plex-Token=' + PLEX_TOKEN
+    request_status = put(enable_url, None)
+
+    if request_status.status_code != 200:
+        print("Failed to enable remote forwarding", file=stderr)
+
+
+def get_clients(plex):
+    """
+    Get a list of ip addresses for all currently connected
+    plex clients. Ignores all local ip addresses
+    :param plex: The plex server instance
+    :return: A list of ip addresses connected to plex
+    """
+    clients = []
+    for client in plex.clients():
+        first_octet = client.address[:client.address.find(".")]
+        if first_octet in LOCAL_OCTET:
+            clients.append(client.title)
+        try:
+            client.stop()
+        except Exception:
+            print(client.title)
+
+    print(clients)
+    return None
+
+
+def stop_client(plex, client):
+    """
+    Stop the plex clients' video
+    :param plex: The plex server instance
+    :param client: The client to stop
+    :return: True if successful else, False
+    """
+    success = True
+    try:
+        plex.client(client).stop()
+    except Exception:
+        success = False
+
+    return success
 
 
 def tests(plex, queue):
@@ -208,8 +262,10 @@ def tests(plex, queue):
     same_director(plex, 'Iron Man')
 
     print("\n\n======= Reset Connection ============")
-    reset_connection(plex)
+    reset_connection()
 
+    print("\n\n======= Connected Clients ============")
+    clients = get_clients(plex)
 
 def main():
     """
@@ -217,10 +273,6 @@ def main():
     run the tests if asked for.
     :return: None
     """
-    load_dotenv()
-    PLEX_URL = getenv('PLEX_URL')
-    PLEX_TOKEN = getenv('PLEX_TOKEN')
-
     plex = PlexServer(PLEX_URL, PLEX_TOKEN)
     queue = list()
     tests(plex, queue)
