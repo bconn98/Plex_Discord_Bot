@@ -116,6 +116,25 @@ def same_director_type(plex, video_name, video_type):
     return videos
 
 
+def get_director(plex, video_name, video_type):
+    """
+    Get the director of the entered video
+    :param plex: The plex server instance
+    :param video_name: The video name to search for
+    :param video_type: The type of videos to search
+    :return: The name of the director
+    """
+    found = video_exists(plex, video_name, video_type)
+    director = None
+
+    if found:
+        plex_videos = plex.library.section(video_type)
+        director_video = plex_videos.get(video_name)
+        director = director_video.directors[0]
+
+    return director
+
+
 def same_director(plex, video_name):
     """
     Find all videos with the same director as the entered video
@@ -125,6 +144,15 @@ def same_director(plex, video_name):
     """
     videos = same_director_type(plex, video_name, "Movies")
     videos += same_director_type(plex, video_name, "TV Shows")
+    director = get_director(plex, video_name, "Movies")
+
+    if director is None:
+        director = get_director(plex, video_name, "TV Shows")
+
+    if director is not None:
+        videos.append(director.tag)
+        print(director.tag)
+
     return videos
 
 
@@ -200,6 +228,7 @@ def main():
     plex = PlexServer(PLEX_URL, PLEX_TOKEN)
     queue = list()
     tests(plex, queue)
+
 
 if __name__ == "__main__":
     main()
