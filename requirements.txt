@@ -1,0 +1,3 @@
+discord
+plexapi
+python-dotenv
