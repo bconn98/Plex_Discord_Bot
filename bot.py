@@ -10,7 +10,7 @@ import discord
 
 from dotenv import load_dotenv
 from discord.ext import commands
-from plex_control import add_to_list
+from plex_control import add_to_list, find_by_keyword, same_director, current_sessions
 from plexapi.server import PlexServer
 from queue import Queue
 
@@ -45,9 +45,30 @@ async def remove(ctx, name_of_media):
     list.remove(name_of_media)
     await ctx.send(name_of_media + ' removed from Queue.\nCurrent Queue: ' + display_queue())
 
+@bot.command(name='keyword', help='Finds media based on a keyword')
+async def keyword(ctx, keyword):
+    result = format_results(find_by_keyword(plex_server, keyword))
+    await ctx.send('Media associated with this keyword: \n' + result)
+
+@bot.command(name='director', help='Displays list of other media with the same director')
+async def director(ctx, name_of_media):
+    result = format_results(same_director(plex_server, director))
+    await ctx.send('Other works by this director: \n' + result)
+
+@bot.command(name='sessions', help='Displays what is being watched right now')
+async def sessions(ctx):
+    result = format_results(current_sessions(plex_server))
+    await ctx.send('Currently being watched: \n' + result)
+    
 def display_queue():
     result = ''
     for a, b in enumerate(list, 1):
+        result += '{}. {}\n'.format(a, b)
+    return result
+
+def format_results(results):
+    result = ''
+    for a, b in enumerate(results, 1):
         result += '{}. {}\n'.format(a, b)
     return result
 
