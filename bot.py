@@ -48,12 +48,13 @@ async def remove(ctx, name_of_media):
 @bot.command(name='keyword', help='Finds media based on a keyword')
 async def keyword(ctx, keyword):
     result = format_results(find_by_keyword(plex_server, keyword))
-    await ctx.send('Media associated with this keyword: \n' + result)
+    await ctx.send('Media associated with \'{}\': \n'.format(keyword) + result)
 
 @bot.command(name='director', help='Displays list of other media with the same director')
 async def director(ctx, name_of_media):
-    result = format_results(same_director(plex_server, director))
-    await ctx.send('Other works by this director: \n' + result)
+    videos, director  = same_director(plex_server, name_of_media)
+    result = format_results(videos)
+    await ctx.send('Other works by {}: \n'.format(director) + result)
 
 @bot.command(name='sessions', help='Displays what is being watched right now')
 async def sessions(ctx):
