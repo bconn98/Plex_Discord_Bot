@@ -149,11 +149,7 @@ def same_director(plex, video_name):
     if director is None:
         director = get_director(plex, video_name, "TV Shows")
 
-    if director is not None:
-        videos.append(director.tag)
-        print(director.tag)
-
-    return videos
+    return videos, director.tag
 
 
 def refresh(plex):
