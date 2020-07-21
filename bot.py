@@ -5,8 +5,9 @@ date: 7/20/2020
 """
 
 import os
-
+import random
 import discord
+
 from dotenv import load_dotenv
 from discord.ext import commands
 from plex_control import add_to_list
@@ -27,17 +28,18 @@ list = []
 
 @bot.command(name='bog', help='Responds with a bog moment')
 async def bog(ctx):
-    response = "BOG CHURCH"
+    bog_moments = ["BOG CHURCH", "Hello? Bog Department?", "bog led theocracy 2020"]
+    response = random.choice(bog_moments)
     await ctx.send(response)
 
-@bot.command(name='queue', help='Queues a Movie/TV Show to be downloaded if it is not already on the server or queue.\nIf multi-worded use double quotes surrounding it.')
+@bot.command(name='queue', help='Queues Movie/TV Show to be put on Plex. If multi-worded, surround with double quotes.')
 async def botqueue(ctx, name_of_media):
     if add_to_list(plex_server, list, name_of_media):
         await ctx.send('Media has been added to download queue. \nCurrent Queue: \n'  + display_queue())
     else:
         await ctx.send('Media is already present in download queue or server. \nCurrent Queue: \n'  + display_queue())
 
-@bot.command(name='dq', help='Removes media from queue (Admin Only)')
+@bot.command(name='dequeue', help='Removes media from queue (Admin Only)')
 @commands.has_permissions(administrator=True)
 async def remove(ctx, name_of_media):
     list.remove(name_of_media)
