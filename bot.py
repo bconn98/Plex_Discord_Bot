@@ -9,7 +9,7 @@ from random import choice
 
 from dotenv import load_dotenv
 from discord.ext import commands
-from plex_control import add_to_list, find_by_keyword, same_director, current_sessions, reset_connections
+from plex_control import add_to_list, find_by_keyword, same_director, current_sessions, reset_connection
 from plexapi.server import PlexServer
 
 
@@ -58,7 +58,7 @@ async def remove(ctx, name_of_media):
     list.remove(name_of_media)
     await ctx.send(name_of_media + ' removed from Queue.\nCurrent Queue: ' + display_queue())
 
-@bot.command(name='pineapple', help='Attempts to reset connections to fix streams. (Admin Only')
+@bot.command(name='pineapple', help='Attempts to reset connections to fix streams. (Admin Only)')
 @commands.has_permissions(administrator=True)
 async def reset(ctx):
     """
@@ -66,7 +66,7 @@ async def reset(ctx):
     Params: None
     Returns: status message
     """
-    if reset_connections()
+    if reset_connection():
         await ctx.send('Connections reset.')
     else:
         await stx.send('Connections failed to be reset.')
