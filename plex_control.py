@@ -182,6 +182,7 @@ def reset_connection():
     if request_status.status_code != 200:
         print("Failed to disable remote forwarding", file=stderr)
         print("Received status code:", request_status, file=stderr)
+        return False
 
     enable_url = PLEX_URL + '/:/prefs?PublishServerOnPlexOnlineKey=true&X-Plex-Client-Identifier' + \
         '=MyApi&X-Plex-Token=' + PLEX_TOKEN
@@ -189,6 +190,8 @@ def reset_connection():
 
     if request_status.status_code != 200:
         print("Failed to enable remote forwarding", file=stderr)
+        return False
+    return True
 
 
 def get_clients(plex):
