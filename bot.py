@@ -9,7 +9,7 @@ from random import choice
 
 from dotenv import load_dotenv
 from discord.ext import commands
-from plex_control import add_to_list, find_by_keyword, same_director, current_sessions, reset_connection
+from plex_control import add_to_list, find_by_keyword, same_director, current_sessions, reset_connection, stop_session
 from plexapi.server import PlexServer
 
 
@@ -112,7 +112,7 @@ async def sessions(ctx):
 
 @bot.command(name='nuke', help='Kill running session')
 @commands.has_permissions(administrator=True)
-async def stop_session(ctx, name_of_session):
+async def stop_user_session(ctx, name_of_session):
     """
     Stops the session entered. "Stop a bad session" functionality.
     Params: name_of_session, the session to stop
