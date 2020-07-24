@@ -118,8 +118,10 @@ async def stop_session(ctx, name_of_session):
     Params: name_of_session, the session to stop
     Returns: result, true if stopped false otherwise
     """
-    result = stop_session(plex_server, name_of_session)
-    await ctx.send('Session Stopped: \n' + result)
+    if stop_session(plex_server, name_of_session):
+        await ctx.send('Session Stopped')
+    else:
+        await ctx.send('Failed to stop session')
 
 
 def display_queue():
