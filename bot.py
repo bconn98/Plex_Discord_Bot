@@ -32,7 +32,7 @@ async def bog(ctx):
     Params: None
     Returns: message
     """
-    bog_moments = ["BOG CHURCH", "Hello? Bog Department?", "bog led theocracy 2020"]
+    bog_moments = ["BOG CHURCH", "Hello? Bog Department?", "bog led theocracy 2020", "legalize bog fights"]
     response = choice(bog_moments)
     await ctx.send(response)
 
