@@ -194,37 +194,23 @@ def reset_connection():
     return True
 
 
-def get_clients(plex):
+def stop_session(plex, session):
     """
-    Get a list of ip addresses for all currently connected
-    plex clients. Ignores all local ip addresses
+    Stop the plex session
     :param plex: The plex server instance
-    :return: A list of ip addresses connected to plex
-    """
-    clients = []
-    for client in plex.clients():
-        first_octet = client.address[:client.address.find(".")]
-        if first_octet in LOCAL_OCTET:
-            clients.append(client.title)
-        try:
-            client.stop()
-        except Exception:
-            print(client.title)
-
-    print(clients)
-    return None
-
-
-def stop_client(plex, client):
-    """
-    Stop the plex clients' video
-    :param plex: The plex server instance
-    :param client: The client to stop
+    :param session: The session to stop
     :return: True if successful else, False
     """
-    success = True
+    success = False
     try:
-        plex.client(client).stop()
+        for live_session in plex.sessions():
+            if hasattr(live_session, 'grandparentTitle'):
+                if live_session.grandparentTitle == session:
+                    live_session.stop()
+                    success = True
+            if live_session.title == session:
+                    live_session.stop()
+                    success = True
     except Exception:
         success = False
 
@@ -265,10 +251,10 @@ def tests(plex, queue):
     same_director(plex, 'Iron Man')
 
     print("\n\n======= Reset Connection ============")
-    reset_connection()
+    # print("Connection Reset:", reset_connection())
 
-    print("\n\n======= Connected Clients ============")
-    clients = get_clients(plex)
+    print("\n\n======= Stop Session ============")
+    print("Session Stopped:", stop_session(plex, 'Psych'))
 
 def main():
     """
