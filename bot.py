@@ -110,7 +110,7 @@ async def sessions(ctx):
     await ctx.send('Currently being watched: \n' + result)
 
 
-@bot.command(name='nuke', help='Kill running session')
+@bot.command(name='nuke', help='Kill running session (Admin only, ask for help)')
 @commands.has_permissions(administrator=True)
 async def stop_user_session(ctx, name_of_session):
     """
