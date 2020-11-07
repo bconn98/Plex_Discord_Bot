@@ -8,8 +8,10 @@ from os import getenv
 from random import choice
 
 from dotenv import load_dotenv
-from discord.ext import commands
-from plex_control import add_to_list, find_by_keyword, same_director, current_sessions, reset_connection, stop_session
+from discord import Client
+from discord.ext import commands, tasks
+from discord.utils import get
+from plex_control import add_to_list, find_by_keyword, same_director, current_sessions, reset_connection, stop_session, check_list
 from plexapi.server import PlexServer
 
 
@@ -20,9 +22,25 @@ PLEX_URL = getenv('PLEX_URL')
 PLEX_TOKEN = getenv('PLEX_TOKEN')
 
 bot = commands.Bot(command_prefix='!')
+client = Client()
 plex_server = PlexServer(PLEX_URL, PLEX_TOKEN)
 
-list = []
+lst = []
+
+@tasks.loop(minutes=1, count=None)
+async def my_background_task():
+    """
+    Temporary don't notify users when the video is removed from the list
+    :return: None
+    """
+    global counter
+    channel = bot.get_channel(734911639169531930)
+    video = check_list(plex_server, lst)
+    # if video:
+    #     await channel.send(video + " found in Plex!")
+        # await channel.send_message(f"""video + " found in Plex!""")
+    # else:
+        # await channel.send("nothing found in plex")
 
 
 @bot.command(name='bog', help='Responds with a bog moment')
@@ -32,7 +50,7 @@ async def bog(ctx):
     Params: None
     Returns: message
     """
-    bog_moments = ["BOG CHURCH", "Hello? Bog Department?", "bog led theocracy 2020", "legalize bog fights"]
+    bog_moments = ["BOG CHURCH", "Hello? Bog Department?", "bog led theocracy 2020", "legalize bog fights", "Reginald Feather Bottom"]
     response = choice(bog_moments)
     await ctx.send(response)
 
@@ -44,10 +62,20 @@ async def botqueue(ctx, name_of_media):
     Params: name_of_media, the Media's name
     Returns: status message
     """
-    if add_to_list(plex_server, list, name_of_media):
+    if add_to_list(plex_server, lst, name_of_media):
         await ctx.send('Media has been added to download queue. \nCurrent Queue: \n'  + display_queue())
     else:
         await ctx.send('Media is already present in download queue or server. \nCurrent Queue: \n'  + display_queue())
+
+
+@bot.command(name='list', help='Shows the current Queue')
+async def showqueue(ctx):
+    """
+    Checks to see if media is already in the queue or server. If not adds it to the queue.
+    Params: name_of_media, the Media's name
+    Returns: status message
+    """
+    await ctx.send('Current Queue: \n'  + display_queue())
 
 
 @bot.command(name='dequeue', help='Removes media from queue (Admin Only)')
@@ -58,7 +86,7 @@ async def remove(ctx, name_of_media):
     Params: name_of_media, the Media's name
     Returns: message
     """
-    list.remove(name_of_media)
+    lst.remove(name_of_media)
     await ctx.send(name_of_media + ' removed from Queue.\nCurrent Queue: ' + display_queue())
 
 
@@ -131,7 +159,7 @@ def display_queue():
     Return: result, formatted queue
     """
     result = ''
-    for a, b in enumerate(list, 1):
+    for a, b in enumerate(lst, 1):
         result += '{}. {}\n'.format(a, b)
     return result
 
@@ -147,4 +175,5 @@ def format_results(results):
         result += '{}. {}\n'.format(a, b)
     return result
 
+my_background_task.start()
 bot.run(TOKEN)

@@ -31,7 +31,7 @@ def add_to_list(plex, lst, new_video):
     if not found:
         found = video_exists(plex, new_video, "TV Shows")
 
-    if not found:
+    if not found and new_video not in lst:
         lst.append(new_video)
         return True
 
@@ -51,6 +51,19 @@ def video_exists(plex, video_name, video_type):
         if video.title == video_name:
             return True
     return False
+
+
+def check_list(plex, lst):
+    """
+    Check if any keywords in the list are in the plex server
+    :param plex: The plex server instance
+    :param lst: A list of keywords to search through
+    :return: Name of the matching video found
+    """
+    for video in lst:
+        if find_by_keyword(plex, video):
+            lst.remove(video)
+            return video
 
 
 def find_by_keyword_type(plex, keyword, video_type):
