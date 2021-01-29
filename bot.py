@@ -6,6 +6,7 @@ date: 7/20/2020
 
 from os import getenv
 from random import choice
+from time import sleep
 
 from dotenv import load_dotenv
 from discord import Client
@@ -175,5 +176,6 @@ def format_results(results):
         result += '{}. {}\n'.format(a, b)
     return result
 
+sleep(120)
 my_background_task.start()
 bot.run(TOKEN)
