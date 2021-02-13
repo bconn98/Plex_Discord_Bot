@@ -15,33 +15,66 @@ from discord.utils import get
 from plex_control import add_to_list, find_by_keyword, same_director, current_sessions, reset_connection, stop_session, check_list
 from plexapi.server import PlexServer
 
+import asyncio
+from pickle import load, dump
+
+sleep(120)
 
 load_dotenv()
 TOKEN = getenv('DISCORD_TOKEN')
 GUILD = getenv('DISCORD_GUILD')
 PLEX_URL = getenv('PLEX_URL')
 PLEX_TOKEN = getenv('PLEX_TOKEN')
+CHANNEL_ID = getenv('CHANNEL_ID')
 
 bot = commands.Bot(command_prefix='!')
 client = Client()
 plex_server = PlexServer(PLEX_URL, PLEX_TOKEN)
 
-lst = []
+class Request:
+    """
+    A request object.
+    """
+    # The name of the requestor
+    requestor:str
 
-@tasks.loop(minutes=1, count=None)
-async def my_background_task():
+    # The title that was requested
+    title:str
+
+    def __init__(self, requestor, title):
+        self.requestor = requestor
+        self.title = title
+
+    def get_requestor(self):
+        return self.requestor
+
+    def get_title(self):
+        return self.title
+
+
+# Load the queue from persistant storage
+lst = load(open("save.p", "rb" ))
+
+
+async def my_task():
     """
-    Temporary don't notify users when the video is removed from the list
-    :return: None
+    Background task that checks for videos in the queue being added to plex.
+    Notifies the user that asked for the item if it is found.
     """
-    global counter
-    channel = bot.get_channel(734911639169531930)
-    video = check_list(plex_server, lst)
-    # if video:
-    #     await channel.send(video + " found in Plex!")
-        # await channel.send_message(f"""video + " found in Plex!""")
-    # else:
-        # await channel.send("nothing found in plex")
+    while True:
+        channel = bot.get_channel(CHANNEL_ID) 
+        video_list = []
+        for req in lst:
+            video_list.append(req.get_title())
+
+        video = check_list(plex_server, video_list)
+
+        if channel and video:
+            for req in lst:
+                if video == req.title:
+                    await channel.send(f"{req.get_requestor()} {req.get_title()} found in Plex!")
+                    lst.remove(req)
+        await asyncio.sleep(1)
 
 
 @bot.command(name='bog', help='Responds with a bog moment')
@@ -64,9 +97,10 @@ async def botqueue(ctx, name_of_media):
     Returns: status message
     """
     if add_to_list(plex_server, lst, name_of_media):
-        await ctx.send('Media has been added to download queue. \nCurrent Queue: \n'  + display_queue())
+        lst.append(Request(ctx.message.author.mention, name_of_media))
+        await ctx.send(f'{ctx.message.author.mention} {name_of_media} has been added to download queue. \nCurrent Queue: \n{display_queue()}')
     else:
-        await ctx.send('Media is already present in download queue or server. \nCurrent Queue: \n'  + display_queue())
+        await ctx.send(f'{name_of_media} is already present in download queue or server. \nCurrent Queue: \n{display_queue()}')
 
 
 @bot.command(name='list', help='Shows the current Queue')
@@ -153,6 +187,15 @@ async def stop_user_session(ctx, name_of_session):
         await ctx.send('Failed to stop session')
 
 
+# Close the bot
+@bot.command(aliases=["quit"])
+@commands.has_permissions(administrator=True)
+async def close(ctx):
+    await ctx.send('Shutting down and saving state')
+    dump(lst, open( "save.p", "wb" ))
+    await bot.close()
+
+
 def display_queue():
     """
     Aux function used to format the queue for returns.
@@ -161,7 +204,7 @@ def display_queue():
     """
     result = ''
     for a, b in enumerate(lst, 1):
-        result += '{}. {}\n'.format(a, b)
+        result += '{}. {}\n'.format(a, b.get_title())
     return result
 
 
@@ -176,6 +219,6 @@ def format_results(results):
         result += '{}. {}\n'.format(a, b)
     return result
 
-sleep(120)
-my_background_task.start()
 bot.run(TOKEN)
+client.loop.create_task(my_task())
+

@@ -19,8 +19,7 @@ LOCAL_OCTET = ['10', '127', '192']
 
 def add_to_list(plex, lst, new_video):
     """
-    Add a new video to the queue if there are no matching video's
-    in the current plex database
+    Check if a new video is in the current plex database
     :param plex: The plex server instance
     :param lst: The list to add the new video too
     :param new_video: The new video to add
@@ -32,7 +31,6 @@ def add_to_list(plex, lst, new_video):
         found = video_exists(plex, new_video, "TV Shows")
 
     if not found and new_video not in lst:
-        lst.append(new_video)
         return True
 
     return False
@@ -78,7 +76,6 @@ def find_by_keyword_type(plex, keyword, video_type):
     videos = plex.library.section(video_type)
     for video in videos.search(keyword):
         found_videos.append(video.title)
-        print(video.title)
     return found_videos
 
 
